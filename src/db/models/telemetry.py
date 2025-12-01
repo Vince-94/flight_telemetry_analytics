@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, SmallInteger, func, JSON
-from sqlalchemy.dialects.postgresql import UUID, DOUBLE_PRECISION, DOUBLE_PRE
+from sqlalchemy.dialects.postgresql import UUID, DOUBLE_PRECISION
 from sqlalchemy.orm import Mapped, mapped_column
 from .base import Base
 import uuid

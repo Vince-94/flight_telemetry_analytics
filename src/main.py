@@ -3,10 +3,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-import asyncio
 
 from src.db.session import get_db
 from src.core.config import settings
+from src.api.v1.api import router as v1_router
 
 
 @asynccontextmanager
@@ -17,11 +17,16 @@ async def lifespan(app: FastAPI):
     print("Application shutdown")
 
 
+# Instantiate FastAPI
 app = FastAPI(
     title="Drone Telemetry Platform",
     version="0.1.0",
     lifespan=lifespan
 )
+
+
+# Add router
+app.include_router(v1_router)
 
 
 # Root

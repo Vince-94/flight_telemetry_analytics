@@ -24,7 +24,9 @@ class Drone(Base):
     api_key: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
 
     # Created/Updated timespamp
-    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
     updated_at: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

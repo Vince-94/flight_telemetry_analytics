@@ -35,8 +35,6 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Every time you change models during early dev
-python -m src.db.init_db
 ```
 
 ### Start application
@@ -44,7 +42,11 @@ python -m src.db.init_db
     ```sh
     docker run -d --name pg-drone -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=dronedb -p 5432:5432 postgres:15
     ```
-2. Start application:
+2. Update tables every time you change models during early dev:
+    ```sh
+    python3 -m src.db.init_db
+    ```
+3. Start application:
     ```sh
     uvicorn src.main:app --reload
     ```
@@ -53,6 +55,10 @@ python -m src.db.init_db
 - Health
     ```sh
     http://127.0.0.1:8000/health
+    ```
+- Register new drone
+    ```sh
+    curl -X POST http://127.0.0.1:8000/v1/drones/ -H "Content-Type: application/json" -d '{"name": "DRONE_NAME"}'
     ```
 
 
