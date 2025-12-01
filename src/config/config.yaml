@@ -1,0 +1,6 @@
+DEBUG_MODE: false
+DATABASE_URL: "postgresql+asyncpg://postgres:postgres@localhost:5432/dronedb"
+
+localhost: "http://127.0.0.1:8000/health"
+hendpoints:
+  - health: "health"
