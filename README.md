@@ -52,23 +52,52 @@ pip install -r requirements.txt
     ```
 
 ### Endpoints
-- Health
+- [GET] Health
     ```sh
-    curl -X GET http://127.0.0.1:8000/health
+    curl -X GET http://127.0.0.1:8000/health | python3 -m json.tool | pygmentize -l json
     ```
-- Register new drone
+- [POST] Register new drone
     ```sh
     curl -X POST http://127.0.0.1:8000/v1/drones/ -H "Content-Type: application/json" -d '{"name": "DRONE_NAME"}'
     ```
-- Send telemetry
+- [GET] Get the list of drones of the user
+    ```sh
+    curl -X GET http://127.0.0.1:8000/v1/drones/ -H "X-API-Key: API_KEY" | python3 -m json.tool | pygmentize -l json
+    ```
+- [GET] Get a specific drone of an user
+    ```sh
+    curl -X GET http://127.0.0.1:8000/v1/drones/{id}/ -H "X-API-Key: API_KEY" | python3 -m json.tool | pygmentize -l json
+    ```
+- [POST] Send telemetry
     ```sh
     curl -X POST http://127.0.0.1:8000/v1/telemetry/ -H "X-API-Key: API_KEY" -H "Content-Type: application/json" -d '[{"ts": "2025-12-01T12:00:00Z", "throttle": 0.65, "voltage": 16.8, "current": 45.2, "mah_drawn": 1234}, {"ts": "2025-12-01T12:00:01Z", "throttle": 0.78, "voltage": 16.5, "current": 68.1}]'
     ```
-- Get last telemetry
+- [GET] Get last telemetry
     ```sh
-    curl http://127.0.0.1:8000/v1/telemetry/live/ -H "X-API-Key: API_KEY" | python3 -m json.tool | pygmentize -l json
+    curl -X GET http://127.0.0.1:8000/v1/telemetry/live/ -H "X-API-Key: API_KEY" | python3 -m json.tool | pygmentize -l json
     ```
 
+TODO:
+- [GET] Get registered drones
+    ```sh
+    curl -X GET http://127.0.0.1:8000/v1/all_drones
+    ```
+- [WS] Real-Time streaming
+    ```sh
+    curl http://127.0.0.1:8000/v1/telemetry/ws/ -H "X-API-Key: API_KEY"
+    ```
+- [GET] List flights (paginated)
+    ```sh
+    curl -X GET http://127.0.0.1:8000/v1/drones/{id}/flights/ -H "X-API-Key: API_KEY"
+    ```
+- [GET] Full flight + raw + analytics
+    ```sh
+    curl -X GET http://127.0.0.1:8000/v1/flights/{id}/ -H "X-API-Key: API_KEY"
+    ```
+- [POST] Force recompute analytics
+    ```sh
+    curl -X POST http://127.0.0.1:8000/v1/flights/{id}/recompute/ -H "X-API-Key: API_KEY"
+    ```
 
 ---
 
