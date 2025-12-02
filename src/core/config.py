@@ -13,7 +13,7 @@ with open(CONFIG_FILEPATH, "r") as file:
 
 class Settings(BaseSettings):
     DATABASE_URL: str = config.get("DATABASE_URL")
-    REDIS_URL: str = config.get("REDIS_URL")
+    REDIS_URL: str = "redis://localhost:6379/0"
 
 @lru_cache
 def get_settings() -> Settings:

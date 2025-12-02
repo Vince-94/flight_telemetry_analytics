@@ -11,7 +11,6 @@ from fastapi import Request
 from src.db.session import AsyncSessionLocal
 from src.db.models.telemetry import TelemetryRaw
 from src.db.models.flight import Flight
-from src.main import app   # to access redis from app.state
 
 
 HIGH_THROTTLE_THRESHOLD = 0.10   # 10%
@@ -94,7 +93,7 @@ def compute_advanced_metrics(df: pd.DataFrame) -> dict:
     return metrics
 
 
-async def handle_flight_detection_and_analytics(drone_id: uuid.UUID, packets: list[dict]):
+async def handle_flight_detection_and_analytics(drone_id: uuid.UUID, packets: list[dict], request: Request):
     """
     Called as BackgroundTask after every telemetry batch.
     Detects flight start/end and runs full analytics when flight ends.
@@ -105,7 +104,8 @@ async def handle_flight_detection_and_analytics(drone_id: uuid.UUID, packets: li
     # Ensure packets are sorted by timestamp
     packets.sort(key=lambda p: p["ts"])
 
-    redis_client = app.state.redis
+    # redis_client = app.state.redis
+    redis_client = get_redis(request)
     state_key = f"drone:{drone_id}:flight_state"
 
     raw_state = await redis_client.get(state_key)
@@ -122,7 +122,12 @@ async def handle_flight_detection_and_analytics(drone_id: uuid.UUID, packets: li
 
         # Process each packet in the batch for flight start detection
         for packet in packets:
-            packet_ts = datetime.fromisoformat(packet["ts"].replace("Z", "+00:00")).replace(tzinfo=UTC)
+            packet_ts = packet["ts"]
+            if packet_ts.tzinfo is None:
+                packet_ts = packet_ts.replace(tzinfo=UTC)
+            else:
+                packet_ts = packet_ts.astimezone(UTC)
+
             throttle = packet.get("throttle", 0) or 0.0
 
             if throttle > HIGH_THROTTLE_THRESHOLD:
@@ -145,7 +150,7 @@ async def handle_flight_detection_and_analytics(drone_id: uuid.UUID, packets: li
         # Assign flight_id to this batch (if we have an active flight)
         if current_flight_id:
             flight_uuid = uuid.UUID(current_flight_id)
-            ts_list = [p["ts"].replace("Z", "+00:00") for p in packets]
+            ts_list = [p["ts"] for p in packets]
             stmt = (
                 update(TelemetryRaw)
                 .where(TelemetryRaw.drone_id == drone_id, TelemetryRaw.ts.in_(ts_list))

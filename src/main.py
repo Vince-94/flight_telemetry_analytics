@@ -10,21 +10,14 @@ from src.core.config import settings
 from src.api.v1.api import router as v1_router
 
 
-# Redis singleton client
-redis_client: Redis | None = None
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
-    app.state.redis = redis_client
-    print("Redis connected")
+    redis = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+    app.state.redis = redis                     # ← this is correct
+    print("Redis connected successfully")
     yield
-
-    # Shutdown
-    if redis_client:
-        await redis_client.close()
-    print("Application shutdown")
+    await redis.close()
+    print("Redis disconnected")
 
 
 # Instantiate FastAPI
@@ -48,17 +41,23 @@ async def root():
 # Health endpoint
 @app.get("/health")
 async def health(db: AsyncSession = Depends(get_db)):
-    """
-    Health check that also pings the database asynchronously.
-    Returns 200 + {"status": "ok", "db": "ok"} if everything is fine.
-    """
+    # Ping DB
     try:
-        # Simple async query to test DB connectivity
         await db.execute(text("SELECT 1"))
-        return {
-            "status": "ok",
-            "db": "up",
-            "redis": "up" if redis_client else "down"
-        }
+        db_status = "up"
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Database not available: {str(e)}")
+        raise HTTPException(status_code=503, detail=f"DB down: {e}")
+
+    # Ping Redis properly using app.state
+    redis_status = "down"
+    try:
+        await app.state.redis.ping()
+        redis_status = "up"
+    except Exception as e:
+        redis_status = f"down ({e})"
+
+    return {
+        "status": "ok" if db_status == "up" and redis_status == "up" else "degraded",
+        "db": db_status,
+        "redis": redis_status
+    }

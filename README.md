@@ -78,9 +78,9 @@ pip install -r requirements.txt
     ```
 
 TODO:
-- [GET] Get registered drones
+- [GET] Get registered flights
     ```sh
-    curl -X GET http://127.0.0.1:8000/v1/all_drones
+    curl -X GET http://127.0.0.1:8000/v1/flights/ -H "X-API-Key: API_KEY" | python3 -m json.tool | pygmentize -l json
     ```
 - [WS] Real-Time streaming
     ```sh

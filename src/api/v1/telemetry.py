@@ -83,6 +83,7 @@ async def ingest_telemetry(
     # Update live cache with the latest packet
     latest_packet = packets[-1].model_dump()
     latest_packet["drone_id"] = str(drone.id)
+    redis = get_redis(request)
     await redis.set(
         f"drone:{drone.id}:live",
         orjson.dumps(latest_packet).decode(),
@@ -93,7 +94,8 @@ async def ingest_telemetry(
     background.add_task(
         handle_flight_detection_and_analytics,
         drone.id,
-        [p.model_dump() for p in packets]   # send raw dicts (with proper ts strings)
+        [p.model_dump() for p in packets],   # send raw dicts (with proper ts strings)
+        request,
     )
 
     return {"ingested": len(packets)}
@@ -105,9 +107,9 @@ async def get_live_telemetry(
     drone: Drone = Depends(get_current_drone)
 ):
     # Get redis instance
-    redis_client = get_redis(request)
+    redis = get_redis(request)
 
-    data = await redis_client.get(f"drone:{drone.id}:live")
+    data = await redis.get(f"drone:{drone.id}:live")
     if not data:
         return {"status": "no recent telemetry"}
 
