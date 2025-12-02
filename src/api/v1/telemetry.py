@@ -1,14 +1,17 @@
+#!/usr/bin/env python3
 import json
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+import orjson
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, status, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.db.session import get_db
 from src.db.models.telemetry import TelemetryRaw
 from src.db.models.drone import Drone
 from src.core.security import get_current_drone
 from src.schemas.telemetry import TelemetryIngestRequest
-import json
-import orjson
+from src.services.flight_service import handle_flight_detection_and_analytics
 
 
 router = APIRouter(prefix="/telemetry", tags=["telemetry"])
@@ -39,6 +42,7 @@ async def ingest_telemetry(
     packets: list[TelemetryIngestRequest],
     drone: Drone = Depends(get_current_drone),
     db: AsyncSession = Depends(get_db),
+    background: BackgroundTasks = None,
 ):
     # Check if there are no packets
     if len(packets) == 0:
@@ -76,15 +80,20 @@ async def ingest_telemetry(
     db.add_all(db_packets)
     await db.commit()
 
-    redis = get_redis(request)
-
-    # Update live cache with the very latest packet
-    latest = packets[-1].model_dump()
-    latest["drone_id"] = str(drone.id)
+    # Update live cache with the latest packet
+    latest_packet = packets[-1].model_dump()
+    latest_packet["drone_id"] = str(drone.id)
     await redis.set(
         f"drone:{drone.id}:live",
-        orjson.dumps(latest).decode(),   # orjson returns bytes → decode to str
-        ex=60,
+        orjson.dumps(latest_packet).decode(),
+        ex=60,  # expire after 60 seconds of no data
+    )
+
+    # Trigger flight session detection + analytics in background (non-blocking)
+    background.add_task(
+        handle_flight_detection_and_analytics,
+        drone.id,
+        [p.model_dump() for p in packets]   # send raw dicts (with proper ts strings)
     )
 
     return {"ingested": len(packets)}
@@ -95,8 +104,11 @@ async def get_live_telemetry(
     request: Request,
     drone: Drone = Depends(get_current_drone)
 ):
-    redis = get_redis(request)
-    data = await redis.get(f"drone:{drone.id}:live")
+    # Get redis instance
+    redis_client = get_redis(request)
+
+    data = await redis_client.get(f"drone:{drone.id}:live")
     if not data:
         return {"status": "no recent telemetry"}
+
     return json.loads(data)

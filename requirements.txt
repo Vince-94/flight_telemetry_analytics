@@ -9,3 +9,5 @@ pyyaml
 redis
 orjson
 pygments
+pandas
+numpy
