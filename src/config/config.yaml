@@ -1,5 +1,6 @@
-DEBUG_MODE: false
+DEBUG: false
 DATABASE_URL: "postgresql+asyncpg://postgres:postgres@localhost:5432/dronedb"
+REDIS_URL: "redis://localhost:6379/0"
 
 localhost: "http://127.0.0.1:8000/health"
 hendpoints:

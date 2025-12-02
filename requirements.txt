@@ -6,3 +6,8 @@ psycopg2-binary
 pydantic-settings[dotenv]
 alembic
 pyyaml
+redis
+orjson
+pygments
+pandas
+numpy

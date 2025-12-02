@@ -35,26 +35,69 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Every time you change models during early dev
-python -m src.db.init_db
 ```
 
 ### Start application
-1. Start PostgreSQL docker container:
+1. Start PostgreSQL and redis docker containers:
     ```sh
-    docker run -d --name pg-drone -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=dronedb -p 5432:5432 postgres:15
+    docker-compose up -d
     ```
-2. Start application:
+2. Update tables every time you change models during early dev:
+    ```sh
+    python3 -m src.db.init_db
+    ```
+3. Start application:
     ```sh
     uvicorn src.main:app --reload
     ```
 
 ### Endpoints
-- Health
+- [GET] Health
     ```sh
-    http://127.0.0.1:8000/health
+    curl -X GET http://127.0.0.1:8000/health | python3 -m json.tool | pygmentize -l json
+    ```
+- [POST] Register new drone
+    ```sh
+    curl -X POST http://127.0.0.1:8000/v1/drones/ -H "Content-Type: application/json" -d '{"name": "DRONE_NAME"}'
+    ```
+- [GET] Get the list of drones of the user
+    ```sh
+    curl -X GET http://127.0.0.1:8000/v1/drones/ -H "X-API-Key: API_KEY" | python3 -m json.tool | pygmentize -l json
+    ```
+- [GET] Get a specific drone of an user
+    ```sh
+    curl -X GET http://127.0.0.1:8000/v1/drones/{id}/ -H "X-API-Key: API_KEY" | python3 -m json.tool | pygmentize -l json
+    ```
+- [POST] Send telemetry
+    ```sh
+    curl -X POST http://127.0.0.1:8000/v1/telemetry/ -H "X-API-Key: API_KEY" -H "Content-Type: application/json" -d '[{"ts": "2025-12-01T12:00:00Z", "throttle": 0.65, "voltage": 16.8, "current": 45.2, "mah_drawn": 1234}, {"ts": "2025-12-01T12:00:01Z", "throttle": 0.78, "voltage": 16.5, "current": 68.1}]'
+    ```
+- [GET] Get last telemetry
+    ```sh
+    curl -X GET http://127.0.0.1:8000/v1/telemetry/live/ -H "X-API-Key: API_KEY" | python3 -m json.tool | pygmentize -l json
+    ```
+- [GET] Get registered flights metrics
+    ```sh
+    curl -X GET http://127.0.0.1:8000/v1/flights/ -H "X-API-Key: API_KEY" | python3 -m json.tool | pygmentize -l json
     ```
 
+TODO:
+- [WS] Real-Time streaming
+    ```sh
+    curl http://127.0.0.1:8000/v1/telemetry/ws/ -H "X-API-Key: API_KEY"
+    ```
+- [GET] List flights (paginated)
+    ```sh
+    curl -X GET http://127.0.0.1:8000/v1/drones/{id}/flights/ -H "X-API-Key: API_KEY"
+    ```
+- [GET] Full flight + raw + analytics
+    ```sh
+    curl -X GET http://127.0.0.1:8000/v1/flights/{id}/ -H "X-API-Key: API_KEY"
+    ```
+- [POST] Force recompute analytics
+    ```sh
+    curl -X POST http://127.0.0.1:8000/v1/flights/{id}/recompute/ -H "X-API-Key: API_KEY"
+    ```
 
 ---
 
