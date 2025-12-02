@@ -76,12 +76,12 @@ pip install -r requirements.txt
     ```sh
     curl -X GET http://127.0.0.1:8000/v1/telemetry/live/ -H "X-API-Key: API_KEY" | python3 -m json.tool | pygmentize -l json
     ```
-
-TODO:
-- [GET] Get registered flights
+- [GET] Get registered flights metrics
     ```sh
     curl -X GET http://127.0.0.1:8000/v1/flights/ -H "X-API-Key: API_KEY" | python3 -m json.tool | pygmentize -l json
     ```
+
+TODO:
 - [WS] Real-Time streaming
     ```sh
     curl http://127.0.0.1:8000/v1/telemetry/ws/ -H "X-API-Key: API_KEY"
