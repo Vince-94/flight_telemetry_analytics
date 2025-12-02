@@ -1,4 +1,4 @@
-DEBUG_MODE: false
+DEBUG: false
 DATABASE_URL: "postgresql+asyncpg://postgres:postgres@localhost:5432/dronedb"
 REDIS_URL: "redis://localhost:6379/0"
 
