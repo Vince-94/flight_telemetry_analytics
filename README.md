@@ -38,9 +38,9 @@ pip install -r requirements.txt
 ```
 
 ### Start application
-1. Start PostgreSQL docker container:
+1. Start PostgreSQL and redis docker containers:
     ```sh
-    docker run -d --name pg-drone -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=dronedb -p 5432:5432 postgres:15
+    docker-compose up -d
     ```
 2. Update tables every time you change models during early dev:
     ```sh
@@ -54,11 +54,19 @@ pip install -r requirements.txt
 ### Endpoints
 - Health
     ```sh
-    http://127.0.0.1:8000/health
+    curl -X GET http://127.0.0.1:8000/health
     ```
 - Register new drone
     ```sh
     curl -X POST http://127.0.0.1:8000/v1/drones/ -H "Content-Type: application/json" -d '{"name": "DRONE_NAME"}'
+    ```
+- Send telemetry
+    ```sh
+    curl -X POST http://127.0.0.1:8000/v1/telemetry/ -H "X-API-Key: API_KEY" -H "Content-Type: application/json" -d '[{"ts": "2025-12-01T12:00:00Z", "throttle": 0.65, "voltage": 16.8, "current": 45.2, "mah_drawn": 1234}, {"ts": "2025-12-01T12:00:01Z", "throttle": 0.78, "voltage": 16.5, "current": 68.1}]'
+    ```
+- Get last telemetry
+    ```sh
+    curl http://127.0.0.1:8000/v1/telemetry/live/ -H "X-API-Key: API_KEY" | python3 -m json.tool | pygmentize -l json
     ```
 
 
