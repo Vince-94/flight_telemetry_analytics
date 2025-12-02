@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import uuid
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 import orjson
 import pandas as pd
 import numpy as np
