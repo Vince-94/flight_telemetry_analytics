@@ -16,6 +16,7 @@ from src.main import app   # to access redis from app.state
 
 HIGH_THROTTLE_THRESHOLD = 0.10   # 10%
 IDLE_TIMEOUT_SECONDS = 15        # if throttle ≤ 10% for 15s → flight ends
+UTC = timezone.utc
 
 
 def get_redis(request: Request):
