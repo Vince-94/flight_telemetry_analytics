@@ -18,6 +18,23 @@ services:
       timeout: 5s
       retries: 5
 
+  test-pg:
+    image: postgres:15-alpine
+    container_name: test-pg
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: test_dronedb        # ← use underscore, not hyphen
+    ports:
+      - "5433:5432"
+    volumes:
+      - test_pg_data:/var/lib/postgresql/data   # ← real volume, not tmpfs
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d test_dronedb"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
   redis:
     image: redis:7-alpine
     container_name: redis-drone
@@ -35,3 +52,4 @@ services:
 volumes:
   pg_data:
   redis_data:
+  test_pg_data:

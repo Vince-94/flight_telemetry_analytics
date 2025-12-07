@@ -11,3 +11,7 @@ orjson
 pygments
 pandas
 numpy
+httpx
+
+pytest
+pytest-asyncio
